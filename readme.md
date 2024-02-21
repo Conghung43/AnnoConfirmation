@@ -10,6 +10,10 @@ pip3 install -r requirements.txt
 
 **Run:**
 ```
+Python Main.py 
+
+or
+
 Python3 Main.py
 ```
 

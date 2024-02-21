@@ -88,7 +88,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.GroupBoxArea = heightWidthGroupBoxRatio*class_size*class_size
         for idx in range(numberOfClass):
             group_box = QGroupBox(self)#(f'Group {idx+1}')  # Create QGroupBox with a title
-            group_box.setGeometry(QRect(buffer +idx*(class_size + 2*buffer), 50, class_size, self.size().height()))
+            group_box.setGeometry(QRect(buffer +idx*(class_size + 2*buffer), 50, int(class_size), self.size().height()))
             self.group_boxes.append(group_box)  # Append the created group box to the list
 
     def SetImageToGroup(self, image, group_index, image_index, numberOfColumn, element_dict):
