@@ -162,14 +162,14 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
     def ReadAnnotationInit(self):
         files = os.listdir(self.annotation_dir_path)
-        image_type = 'PNG'
-        annotationType= 'json'
+        image_type = '.PNG'
+        annotationType= '.json'
         self.annotationIndex = 0
         self.annotation_files_path = [os.path.join(self.annotation_dir_path, file) for file in files if file.endswith(annotationType)]
 
         if len(self.annotation_files_path) == 0:
-            image_type = 'jpg'
-            annotationType = 'txt'
+            image_type = '.jpg'
+            annotationType = '.txt'
             self.annotation_files_path = [os.path.join(self.annotation_dir_path, file) for file in files if file.endswith(annotationType)]
         self.currentImage = self.ReadImage(self.annotation_files_path[self.annotationIndex].replace(annotationType,image_type))
         self.currentAnnotation = self.ReadJson(self.annotation_files_path[self.annotationIndex],self.currentImage)
@@ -204,7 +204,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                     arr = np.array(lineSplit[1:], dtype = float).reshape(-1, 2)*np.array([image.shape[1],image.shape[0]])
                     topLeft = (np.min(arr[:,0]), np.min(arr[:,1]))
                     rightBottom = (np.max(arr[:,0]), np.max(arr[:,1]))
-                    data['shapes'].append({'description':f'{int(topLeft[0])},{int(topLeft[1])},{int(rightBottom[0])},{int(rightBottom[1])}'})
+                    data['shapes'].append({'label': self.classes[int(lineSplit[0])],'description':f'{int(topLeft[0])},{int(topLeft[1])},{int(rightBottom[0])},{int(rightBottom[1])}'})
         
         
         numberOfImage = max(dict(Counter(shape['label'] for shape in data['shapes'])).values())
