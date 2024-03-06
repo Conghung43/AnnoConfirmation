@@ -1,7 +1,8 @@
-# Tim kiem danh sach tu moi va trang tu du lieu OCR.
-# Buoc nay co the thay the bang thu cong
-# Nguoi nhap se dung excel , xong do se dung chuong trinh de chuyen 
-#excel thanh list tu moi va trang sach
+"""
+Author: Hung Nguyen Cong
+Date: 2024/2/18
+Description: 
+"""
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -62,16 +63,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         # self.convert.clicked.connect(self.run_images2txts)
         # self.show_txt_btn.clicked.connect(self.read_display_txt)
         self.NextFileBtn.clicked.connect(self.next_and_save)
-        # self.back_btn.clicked.connect(self.back_function)
-        # self.save_btn.clicked.connect(self.save_data_to_verify_tabele)
-        # self.back_btn.clicked.connect(self.back_vocabulary)
-        # self.next_btn.clicked.connect(self.next_vocabulary)
-        # self.image_search.clicked.connect(self.click_search_image)
-        # self.combobox_db.currentIndexChanged.connect(self.db_choosen)
-        # self.combobox_filter_level.currentIndexChanged.connect(self.filter_level_choosen)
-        # self.images_display.mousePressEvent = self.getPos
-        # self.manual_confirm_checkbox.stateChanged.connect(self.db_choosen)
-        # self.open_input_folder_dialog()
+
 
     def changeEvent(self, event):
         if event.type() == event.WindowStateChange:
@@ -143,7 +135,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         #Create backup_file
 
         #Save/overwrite file
-        with open(self.json_files[self.annotationIndex], 'w') as json_file:
+        with open(self.annotation_files_path[self.annotationIndex], 'w') as json_file:
             json.dump(self.currentAnnotation, json_file)
 
     def UploadImagesToUI(self):
@@ -170,11 +162,19 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
     def ReadAnnotationInit(self):
         files = os.listdir(self.annotation_dir_path)
-        self.json_files = [os.path.join(self.annotation_dir_path, file) for file in files if file.endswith('.json')]
+        image_type = 'PNG'
+        annotationType= 'json'
         self.annotationIndex = 0
-        self.FileNameTxt.setText(os.path.basename(self.json_files[self.annotationIndex]))
-        self.currentAnnotation = self.ReadJson(self.json_files[self.annotationIndex])
-        self.currentImage = self.ReadImage(self.json_files[self.annotationIndex].replace('json','PNG'))
+        self.annotation_files_path = [os.path.join(self.annotation_dir_path, file) for file in files if file.endswith(annotationType)]
+
+        if len(self.annotation_files_path) == 0:
+            image_type = 'jpg'
+            annotationType = 'txt'
+            self.annotation_files_path = [os.path.join(self.annotation_dir_path, file) for file in files if file.endswith(annotationType)]
+
+        self.currentAnnotation = self.ReadJson(self.annotation_files_path[self.annotationIndex])
+        self.currentImage = self.ReadImage(self.annotation_files_path[self.annotationIndex].replace(annotationType,image_type))
+        self.FileNameTxt.setText(os.path.basename(self.annotation_files_path[self.annotationIndex]))
     
     def ReadImage(self, imagePath):
         if os.path.exists(imagePath):
@@ -184,14 +184,27 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
     def ReadJson(self, file_path):
         # Open the JSON file
-        with open(file_path, 'r') as file:
-            # Load the JSON data
-            data = json.load(file)
-            for inx in range(len(data['shapes'])):
-                polypoints = np.array(data['shapes'][inx]['points'])
-                topLeft = (np.min(polypoints[:,0]), np.min(polypoints[:,1]))
-                rightBottom = (np.max(polypoints[:,0]), np.max(polypoints[:,1]))
-                data['shapes'][inx]['description'] = f'{int(topLeft[0])},{int(topLeft[1])},{int(rightBottom[0])},{int(rightBottom[1])}'
+        data = {}
+        if 'json' in file_path:
+            with open(file_path, 'r') as file:
+                # Load the JSON data
+                data = json.load(file)
+                for inx in range(len(data['shapes'])):
+                    polypoints = np.array(data['shapes'][inx]['points'])
+                    topLeft = (np.min(polypoints[:,0]), np.min(polypoints[:,1]))
+                    rightBottom = (np.max(polypoints[:,0]), np.max(polypoints[:,1]))
+                    data['shapes'][inx]['description'] = f'{int(topLeft[0])},{int(topLeft[1])},{int(rightBottom[0])},{int(rightBottom[1])}'
+        # Read TXT
+        else:
+            data['shapes'] = []
+            with open(file_path, "r") as file:
+                # Read all lines from the file into a list
+                lines = file.readlines()
+                for line in lines:
+                    lineSplit = line.replace('\n','').split(' ')
+                    arr = np.array(lineSplit[1:], dtype = float).reshape(-1, 2)
+        
+        
         numberOfImage = max(dict(Counter(shape['label'] for shape in data['shapes'])).values())
         self.imageLabelEdgeSize = int(np.sqrt(self.GroupBoxArea/numberOfImage))
         self.numberOfColumn = int(self.group_boxes[0].size().width()/self.imageLabelEdgeSize)
@@ -268,11 +281,11 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         #Load new annotation
         self.annotationIndex += 1
-        if len(self.json_files) <= self.annotationIndex:
+        if len(self.annotation_files_path) <= self.annotationIndex:
             return
-        self.FileNameTxt.setText(os.path.basename(self.json_files[self.annotationIndex]))
-        self.currentAnnotation = self.ReadJson(self.json_files[self.annotationIndex])
-        self.currentImage = self.ReadImage(self.json_files[self.annotationIndex].replace('json','PNG'))
+        self.FileNameTxt.setText(os.path.basename(self.annotation_files_path[self.annotationIndex]))
+        self.currentAnnotation = self.ReadJson(self.annotation_files_path[self.annotationIndex])
+        self.currentImage = self.ReadImage(self.annotation_files_path[self.annotationIndex].replace('json','PNG'))
         
         self.Group_image_index = [0]*len(self.classes)
         self.UploadImagesToUI()
