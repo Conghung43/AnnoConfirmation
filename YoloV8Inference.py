@@ -54,7 +54,7 @@ for imagePath in image_paths:
 
     if results[0].masks is None:
         continue
-
+    continue
     masks = results[0].masks.xy
     cls = results[0].boxes.cls.numpy()
     #image = Image.open(imagePath)

@@ -57,7 +57,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.LoadFolderBtn.clicked.connect(self.open_input_folder_dialog)
         self.CreateGroupBox(len(self.classes))
 
-        self.open_input_folder_dialog()
+        #self.open_input_folder_dialog()
 
         # for i in range(numberOfImage):
         #     self.SetImageToGroup(image, 1, i,self.numberOfColumn)
@@ -191,8 +191,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
     def ReadJson(self, file_path,image):
         # Open the JSON file
         data = {}
-        if "hot-20240205-152751-022-3151275534876_0_0" in file_path:
-            print()
         if ".json" in file_path:
             with open(file_path, "r") as file:
                 # Load the JSON data
@@ -263,8 +261,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
     #     self.ClassNameGroup_1.setGeometry(QRect(self.class_pannel_size, 50, 121, 391))
 
     def open_input_folder_dialog(self):
-        # self.annotation_dir_path = QFileDialog.getExistingDirectory(self,"Select input annotations folder", "",QFileDialog.ShowDirsOnly)
-        self.annotation_dir_path = r"E:/yolov9/data/0218/outputSegV8 - Copy/YoloV8Output"
+        self.annotation_dir_path = QFileDialog.getExistingDirectory(self,"Select input annotations folder", "",QFileDialog.ShowDirsOnly)
+        # self.annotation_dir_path = r"E:/yolov9/data/0218/outputSegV8 - Copy/YoloV8Output"
         if not self.annotation_dir_path:
             return
         else:
@@ -273,8 +271,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 self.ReadAnnotationInit()
                 self.UploadImagesToUI()
 
-                for i in range(len(self.annotation_files_path)):
-                    self.next_and_save()
+                # for i in range(len(self.annotation_files_path)):
+                #     self.next_and_save()
 
 
     def removeChildren(self):
