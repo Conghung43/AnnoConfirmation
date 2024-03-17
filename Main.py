@@ -122,8 +122,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                         labels.append(child.objectName())
                     child.deleteLater()
             #Delete
-            if '.txt' in self.annotation_files_path[self.annotationIndex]:
-                labels = []
+            # if '.txt' in self.annotation_files_path[self.annotationIndex]:
+            #     labels = []
             for item in self.currentAnnotation["shapes"][:]: 
                 if item["position"] in labels:
                     self.currentAnnotation["shapes"].remove(item)
@@ -207,7 +207,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         else:
             data["shapes"] = []
             data["flags"] = {}
-            data["imagePath"] = file_path.replace(".txt", ".jpg")#"imageHeight": 3672, "imageWidth": 5488
+            data["imagePath"] = os.path.basename(file_path.replace(".txt", ".jpg"))##"imageHeight": 3672, "imageWidth": 5488
             data["imageHeight"] = image.shape[0]
             data["imageWidth"] = image.shape[1]
             data["version"] = "5.3.0"
@@ -229,8 +229,10 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                                            "shape_type": "polygon", "flags": {}
                                            })
         
-        
-        numberOfImage = max(dict(Counter(shape["label"] for shape in data["shapes"])).values())
+        try:
+            numberOfImage = max(dict(Counter(shape["label"] for shape in data["shapes"])).values())
+        except:
+            return data
         self.imageLabelEdgeSize = int(np.sqrt(self.GroupBoxArea/numberOfImage))
         self.numberOfColumn = int(self.group_boxes[0].size().width()/self.imageLabelEdgeSize)
         if self.numberOfColumn ==0: self.numberOfColumn = 1

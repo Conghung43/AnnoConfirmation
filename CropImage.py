@@ -15,27 +15,20 @@ class MyMainWindow():
         self.annotationIndex = -1
         self.group_boxes = []  # List to store the created group boxes
         files = os.listdir(annotation_dir_path)
-        self.json_files = [os.path.join(annotation_dir_path, file) for file in files if file.endswith('.json')]
+        self.imagesPath = [os.path.join(annotation_dir_path, file) for file in files if file.endswith('.PNG')]
         count = 0
-        for jsonFilePath in self.json_files:
-            currentAnnotation = self.ReadJson(jsonFilePath)
-
-            original_width, original_height = currentAnnotation['imageWidth'], currentAnnotation['imageHeight']
+        for imageFilePath in self.imagesPath:
 
             #with open(jsonFilePath.replace('json','txt'), 'w') as file:
                 
             #read image
-            image = Image.open(jsonFilePath.replace('json','PNG'))
+            image = Image.open(imageFilePath)
 
             # Zoom image
             #(800,500) to (4400,3400)
             annotationList = []
             left, upper, right, lower = 800,500,4400,3400
             croppedImage = self.CropImage(image, left, upper, right, lower)
-            for index in range(len(currentAnnotation['shapes'])):
-                label,bbox, _ = self.GetAnnotation(currentAnnotation['shapes'][index])
-                bbox = np.array(bbox) - np.array([left,upper])
-                annotationList.append((label, bbox))
             
 
             #croppedImage.save('test.jpg')
@@ -76,46 +69,17 @@ class MyMainWindow():
                     #draw = ImageDraw.Draw(subImage)
 
                     #dirpath
-                    dirPath = os.path.dirname(jsonFilePath)
-                    fileName = os.path.basename(jsonFilePath)
+                    dirPath = os.path.dirname(imageFilePath)
+                    fileName = os.path.basename(imageFilePath)
 
                     dirPath = os.path.join(dirPath,'outputSegV8')
                     self.CheckDirExist(dirPath)
 
-                    if count %3 == 0:
-                        dirPath = os.path.join(dirPath,'test')
-                    elif count %4 ==0:
-                        dirPath = os.path.join(dirPath,'valid')
-                    else:
-                        dirPath = os.path.join(dirPath,'train')
+                    dirPath = os.path.join(dirPath,'cropped')
 
                     self.CheckDirExist(dirPath)
 
-                    textDir = os.path.join (dirPath, 'labels')
-                    imageDir = os.path.join (dirPath, 'images')
-
-                    self.CheckDirExist(textDir)
-                    self.CheckDirExist(imageDir)
-
-                    txtPath = os.path.join(textDir, fileName.replace('.json',f'_{i}_{j}.txt'))
-                    imagePath = os.path.join(imageDir, fileName.replace('.json',f'_{i}_{j}.jpg'))
-
-                    with open(txtPath, 'w') as file:
-                        for ann in annotationList:
-                            ann = list(ann)
-                            bbox = ann[1]
-                            # if ann[1] >= subLeft and ann[2] >= subUpper and ann[3] <=  subRight and ann[4] <= subLower:
-                            if np.all(bbox[:,0] >= subLeft) and np.all(bbox[:,1] >= subUpper) and np.all(bbox[:,0] <=  subRight) and np.all(bbox[:,1] <= subLower):
-                                bbox = bbox - np.array([subLeft,subUpper])
-                                bbox = bbox/np.array([subWidth,subHeight])
-                                contentPrepared = f'{self.classes.index(ann[0])}'
-                                for index in range(len(bbox)):
-                                    contentPrepared += f' {bbox[index][0]} {bbox[index][1]}'
-                                    if index == len(bbox) -1:
-                                        contentPrepared += '\n'
-                                file.write(contentPrepared)
-
-                                #draw.rectangle(ann[1:], outline="red")
+                    imagePath = os.path.join(dirPath, fileName.replace('.PNG', f'_{i}_{j}.jpg'))
 
                     subImage.save(imagePath)
 
@@ -156,7 +120,7 @@ class MyMainWindow():
         #Create backup_file
 
         #Save/overwrite file
-        with open(self.json_files[self.annotationIndex], 'w') as json_file:
+        with open(self.imagesPath[self.annotationIndex], 'w') as json_file:
             json.dump(self.currentAnnotation, json_file)
      
     def GetAnnotation(self, anno):
@@ -214,11 +178,11 @@ class MyMainWindow():
 
         #Load new ann
         self.annotationIndex += 1
-        if len(self.json_files) <= self.annotationIndex:
+        if len(self.imagesPath) <= self.annotationIndex:
             return
-        self.FileNameTxt.setText(os.path.basename(self.json_files[self.annotationIndex]))
-        self.currentAnnotation = self.ReadJson(self.json_files[self.annotationIndex])
-        self.currentImage = self.ReadImage(self.json_files[self.annotationIndex].replace('json','PNG'))
+        self.FileNameTxt.setText(os.path.basename(self.imagesPath[self.annotationIndex]))
+        self.currentAnnotation = self.ReadJson(self.imagesPath[self.annotationIndex])
+        self.currentImage = self.ReadImage(self.imagesPath[self.annotationIndex].replace('json','PNG'))
         
         self.Group_image_index = [0]*len(self.classes)
         self.UploadImagesToUI()
