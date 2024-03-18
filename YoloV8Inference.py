@@ -34,14 +34,14 @@ def GetImageFromFolder(directory):
 
 #imagesPath = get_image_paths(r"E:\yolov9\data\0218\outputSegV8")
 
-directory = r"E:\yolov9\data\0315\outputSegV8\cropped"
-exportFolderName = 'YoloV8Output'
+directory = r"E:\yolov9\data\0218\outputSegV8"
+exportFolderName = 'YoloV8Output0317'
 exportFolderPath = os.path.join(directory,exportFolderName)
 if not os.path.exists(exportFolderPath):
     os.makedirs(exportFolderPath)
 image_paths = get_image_paths(directory)
-image_paths = GetImageFromFolder(directory)
-model = YOLO(r'C:\Users\kai\Downloads\best.pt')
+#image_paths = GetImageFromFolder(directory)
+model = YOLO(r"C:\Users\kai\Downloads\last.pt")
 
 for imagePath in image_paths:
     print(imagePath)

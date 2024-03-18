@@ -173,7 +173,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.annotation_files_path = [os.path.join(self.annotation_dir_path, file) for file in files if file.endswith(self.annotationType)]
 
         if len(self.annotation_files_path) == 0:
-            self.image_type = ".jpg"
+            self.image_type = ".PNG"
             self.annotationType = ".txt"
             self.annotation_files_path = [os.path.join(self.annotation_dir_path, file) for file in files if file.endswith(self.annotationType)]
         self.currentImage = self.ReadImage(self.annotation_files_path[self.annotationIndex].replace(self.annotationType,self.image_type))
@@ -320,6 +320,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         
         self.Group_image_index = [0]*len(self.classes)
         self.UploadImagesToUI()
+        #auto next
+        self.next_and_save()
 
 app = QApplication(sys.argv)
 my_wnd = MyMainWindow()

@@ -190,37 +190,4 @@ class MyMainWindow():
 
         # Now you can work with the 'data' object, which contains the contents of the JSON file
 
-    def read_display_txt(self):
-        try:
-            if self.index == 1:
-                self.index = int(open(os.path.join(self.annotation_dir_path,f'page.txt'), "r").read())
-        except:
-            pass
-        try:
-            self.page_number.setText(f"{self.index}")
-            f = open(os.path.join(self.annotation_dir_path,f'{self.index}.txt'), "r")
-            self.textEdit_page_content.setPlainText(f.read())
-        except Exception as ex:
-            print(ex)
-            txt_paths = glob.glob(os.path.join(self.annotation_dir_path,'*.*'))
-            if self.index > len(txt_paths):
-                self.page_number.setText(f"{self.index}/{len(txt_paths)} Done!")
-
-    def next_and_save(self):
-        
-        self.find_labels_in_groupbox_and_delete()
-        self.SaveAnnotationToJson()
-        #self.removeChildren()
-
-        #Load new ann
-        self.annotationIndex += 1
-        if len(self.json_files) <= self.annotationIndex:
-            return
-        self.FileNameTxt.setText(os.path.basename(self.json_files[self.annotationIndex]))
-        self.currentAnnotation = self.ReadJson(self.json_files[self.annotationIndex])
-        self.currentImage = self.ReadImage(self.json_files[self.annotationIndex].replace('json','PNG'))
-        
-        self.Group_image_index = [0]*len(self.classes)
-        self.UploadImagesToUI()
-
-convert = MyMainWindow(r'E:\yolov9\data\0315')
+convert = MyMainWindow(r'E:\yolov9\data\0315_Hannah_modified')
