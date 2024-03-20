@@ -7,6 +7,9 @@ import numpy as np
 import cv2
 import json
 from collections import Counter
+from shapely.geometry import Polygon
+from shapely.ops import unary_union
+import geopandas as gpd
 
 class MyMainWindow():
     def __init__(self, annotation_dir_path ):
@@ -40,6 +43,21 @@ class MyMainWindow():
             else:
                 subLeft = mainImageWidth - width
 
+            tempDict = {}
+            if os.path.exists(text_main_path):
+                mainFile = open(text_main_path, "r")
+                mainLines = mainFile.readlines()
+                for line in mainLines:
+                    lineSplit = line.replace("\n","").split(" ")
+                    arr = np.array(lineSplit[1:], dtype = float).reshape(-1, 2)
+                    if len(arr) == 0: continue
+                    if line[0] in tempDict:
+                        tempDict[line[0]].append(arr)
+                    else:
+                        tempDict[line[0]] = [arr]
+
+                mainFile.close()
+
             with open(text_main_path, "a") as mainFile:
 
                 with open(txtPath, "r") as file:
@@ -48,131 +66,36 @@ class MyMainWindow():
                     lines = file.readlines()
 
                     for line in lines:
-
-                        contentPrepared = line[0]
-
+                        mergeFlag = False
                         lineSplit = line.replace("\n","").split(" ")
                         arr = np.array(lineSplit[1:], dtype = float).reshape(-1, 2)*np.array([width, height])
                         if len(arr) == 0: continue
                         arr = (arr + np.array([subLeft,subUpper]) + np.array([left,upper]))/np.array([5488,3672])
 
+                        if line[0] in tempDict:
+                            values = tempDict[line[0]]
+                            for index in range(len(tempDict[line[0]])):
+                                merge_result = None
+                                merge_result = self.merge_overlapping_polygons(arr, values[index])
+                                if merge_result is not None:
+                                    values[index] = merge_result
+                                    mergeFlag = True
+                                    break
+                            if not mergeFlag:
+                                tempDict[line[0]].append(arr)
+                        else:
+                            tempDict[line[0]] = [arr]
+    
+                for key, values in tempDict.items():
+                    for arr in values:
+                        contentPrepared = key
                         for index in range(len(arr)):
                             contentPrepared += f' {arr[index][0]} {arr[index][1]}'
                             if index == len(arr) -1:
                                 contentPrepared += '\n'
                         mainFile.write(contentPrepared)
-                        
-                        
-
-
-
-            # #with open(jsonFilePath.replace('json','txt'), 'w') as file:
-                
-            # #read image
-            # image = Image.open(jsonFilePath.replace('json','PNG'))
-
-            # # Zoom image
-            # #(800,500) to (4400,3400)
-            # annotationList = []
-            # left, upper, right, lower = 800,500,4400,3400
-            # croppedImage = self.CropImage(image, left, upper, right, lower)
-            # for index in range(len(currentAnnotation['shapes'])):
-            #     label,bbox, _ = self.GetAnnotation(currentAnnotation['shapes'][index])
-            #     bbox = np.array(bbox) - np.array([left,upper])
-            #     annotationList.append((label, bbox))
-            
-
-            # #croppedImage.save('test.jpg')
-
-            # newWidth, newHeight = right - left, lower - upper
-            # column, row = 3,2
-            # widthMargin = newWidth/((column -1)*20)
-            # heightMargin = newHeight/((row - 1)*20)
-            
-            # for i in range(row):
-            #     for j in range(column):
-            #         if j == 0:
-            #             subLeft = 0
-            #             subRight = (newWidth/column) * (j+1) + widthMargin   
-            #         elif j == column - 1:
-            #             subRight = newWidth
-            #             subLeft = (newWidth/column) * j - widthMargin
-            #         else:
-            #             subLeft = (newWidth/column) * j - widthMargin
-            #             subRight = (newWidth/column) * (j+1) + widthMargin   
-
-            #         if i == 0:
-            #             subUpper = 0
-            #             subLower = subRight - subLeft
-            #         elif i == row - 1:
-            #             subLower = newHeight
-            #             subUpper = newHeight - (subRight - subLeft)
-            #         else:
-            #             subUpper = newHeight/row * i - heightMargin
-            #             subLower = newHeight/row * (i+1) + heightMargin
-
-
-
-            #         subWidth, subHeight = subRight - subLeft, subLower - subUpper
-
-            #         subImage = croppedImage.crop((subLeft, subUpper, subRight, subLower))
                     
-            #         #draw = ImageDraw.Draw(subImage)
 
-            #         #dirpath
-            #         dirPath = os.path.dirname(jsonFilePath)
-            #         fileName = os.path.basename(jsonFilePath)
-
-            #         dirPath = os.path.join(dirPath,'outputSegV8')
-            #         self.CheckDirExist(dirPath)
-
-            #         if count %3 == 0:
-            #             dirPath = os.path.join(dirPath,'test')
-            #         elif count %4 ==0:
-            #             dirPath = os.path.join(dirPath,'valid')
-            #         else:
-            #             dirPath = os.path.join(dirPath,'train')
-
-            #         self.CheckDirExist(dirPath)
-
-            #         textDir = os.path.join (dirPath, 'labels')
-            #         imageDir = os.path.join (dirPath, 'images')
-
-            #         self.CheckDirExist(textDir)
-            #         self.CheckDirExist(imageDir)
-
-            #         txtPath = os.path.join(textDir, fileName.replace('.json',f'_{i}_{j}.txt'))
-            #         imagePath = os.path.join(imageDir, fileName.replace('.json',f'_{i}_{j}.jpg'))
-
-            #         with open(txtPath, 'w') as file:
-            #             for ann in annotationList:
-            #                 ann = list(ann)
-            #                 bbox = ann[1]
-            #                 # if ann[1] >= subLeft and ann[2] >= subUpper and ann[3] <=  subRight and ann[4] <= subLower:
-            #                 if np.all(bbox[:,0] >= subLeft) and np.all(bbox[:,1] >= subUpper) and np.all(bbox[:,0] <=  subRight) and np.all(bbox[:,1] <= subLower):
-            #                     bbox = bbox - np.array([subLeft,subUpper])
-            #                     bbox = bbox/np.array([subWidth,subHeight])
-            #                     contentPrepared = f'{self.classes.index(ann[0])}'
-            #                     for index in range(len(bbox)):
-            #                         contentPrepared += f' {bbox[index][0]} {bbox[index][1]}'
-            #                         if index == len(bbox) -1:
-            #                             contentPrepared += '\n'
-            #                     file.write(contentPrepared)
-
-            #                     #draw.rectangle(ann[1:], outline="red")
-
-            #         subImage.save(imagePath)
-
-            #         count += 1
-
-
-
-                # for index in range(len(currentAnnotation['shapes'])):
-                #     label,bbox, _ = self.GetAnnotation(currentAnnotation['shapes'][index])
-                #     contentPrepared = f'{self.classes.index(label)} {((bbox[2]+bbox[0])/2)/original_width} {((bbox[3]+bbox[1])/2)/original_height} {(bbox[2]-bbox[0])/original_width} {(bbox[3]-bbox[1])/original_height}'
-                #     if index < len(currentAnnotation['shapes']):
-                #         contentPrepared += '\n'
-                #     file.write(contentPrepared)
 
     def CheckDirExist(self, path):
         if not os.path.exists(path):
@@ -232,6 +155,31 @@ class MyMainWindow():
                 data['shapes'][inx]['description'] = f'{int(topLeft[0])},{int(topLeft[1])},{int(rightBottom[0])},{int(rightBottom[1])}'
         return data
 
-        # Now you can work with the 'data' object, which contains the contents of the JSON file
+
+
+    def merge_overlapping_polygons(self, pl1, pl2):
+        # Create Shapely Polygon objects from the lists of points
+        polygon1 = Polygon(pl1)
+        polygon2 = Polygon(pl2)
+        
+        gdf = gpd.GeoDataFrame(geometry=[polygon1, polygon2])
+
+        # Merge overlapping polygons
+        merge_polygon = unary_union(gdf.geometry)
+
+        # Check if the two polygons intersect
+        if "Multi" not in merge_polygon.geom_type:
+            # # If they intersect, perform a union operation to merge them
+            # merged_polygon = polygon1.union(polygon2)
+            # # Extract the coordinates of the merged polygon
+            # merged_coords = list(merged_polygon.exterior.coords)
+            # # Remove the last coordinate, which is a duplicate of the first one
+            # merged_coords.pop()
+            # print('merged')
+            return list(merge_polygon.exterior.coords)
+        else:
+            # If they don't intersect, return None
+            return None
+
 
 convert = MyMainWindow(r'E:\yolov9\data\0218\outputSegV8\YoloV8OutputWithModel300_0317') 

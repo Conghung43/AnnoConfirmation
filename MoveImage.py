@@ -41,8 +41,8 @@ class MyMainWindow():
             self.CheckDirExist(textDir)
             self.CheckDirExist(imageDir)
 
-            txtPath = os.path.join(textDir, fileName.replace('.json',f'.txt'))
-            imagePath = os.path.join(imageDir, fileName.replace('.json',f'.jpg'))
+            txtPath = os.path.join(textDir, fileName.replace('.json',f'auto.txt'))
+            imagePath = os.path.join(imageDir, fileName.replace('.json',f'auto.jpg'))
 
             with open(txtPath, 'w') as file:
                 annotationList = []
@@ -141,4 +141,4 @@ class MyMainWindow():
 
         # Now you can work with the 'data' object, which contains the contents of the JSON file
 
-convert = MyMainWindow(r'E:\yolov9\data\0315_Hannah_modified')
+convert = MyMainWindow(r'E:\yolov9\data\Epoch200 - modified V2 (0318)')
